@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: maring-api
+
+  datasource:
+    url: jdbc:h2:mem:maring;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop      # 개발용. 운영에서는 validate + 마이그레이션(Flyway) 사용
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true              # http://localhost:8080/h2-console 로 DB 확인
+      path: /h2-console
+
+server:
+  port: 8080
+
+# 마링 도메인 설정 (위기 자원 등). 운영에서는 외부 설정/DB로 관리하고 출시 전 재확인.
+maring:
+  claude:
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: claude-sonnet-5
+    max-tokens: 1024
+    base-url: https://api.anthropic.com
+  crisis-resources:
+    - name: 자살예방 상담전화
+      number: "109"
+      hours: 24시간
+    - name: 정신건강 위기상담
+      number: "1577-0199"
+      hours: 365일 24시간
+    - name: 청소년 상담
+      number: "1388"
+      hours: 상시
+    - name: 여성긴급전화
+      number: "1366"
+      hours: 상시
