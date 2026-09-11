@@ -23,31 +23,39 @@ class MaringRepository {
   }
 
   Future<MaringUser> setMbti(String userId, String mbtiType) async {
-    final json = await _api.put('/api/users/$userId/mbti', body: {'mbtiType': mbtiType});
+    final json =
+        await _api.put('/api/users/$userId/mbti', body: {'mbtiType': mbtiType});
     return MaringUser.fromJson(json as Map<String, dynamic>);
   }
 
   Future<MaringUser> setSpeechStyle(String userId, SpeechStyle style) async {
-    final json = await _api.put('/api/users/$userId/speech-style', body: {'speechStyle': style.apiValue});
+    final json = await _api.put('/api/users/$userId/speech-style',
+        body: {'speechStyle': style.apiValue});
     return MaringUser.fromJson(json as Map<String, dynamic>);
   }
 
   Future<String> startConversation(String userId) async {
-    final json = await _api.post('/api/conversations', query: {'userId': userId});
+    final json =
+        await _api.post('/api/conversations', query: {'userId': userId});
     return (json as Map<String, dynamic>)['conversationId'] as String;
   }
 
-  Future<ChatResponse> sendMessage(String conversationId, String message) async {
-    final json = await _api.post('/api/conversations/$conversationId/messages', body: {'message': message});
+  Future<ChatResponse> sendMessage(
+      String conversationId, String message) async {
+    final json = await _api.post('/api/conversations/$conversationId/messages',
+        body: {'message': message});
     return ChatResponse.fromJson(json as Map<String, dynamic>);
   }
 
   Future<List<ChatMessage>> conversationHistory(String conversationId) async {
     final json = await _api.get('/api/conversations/$conversationId/messages');
-    return (json as List).map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)).toList();
+    return (json as List)
+        .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<EmotionCheckin> submitCheckin(String userId, String emotionCard, int intensity) async {
+  Future<EmotionCheckin> submitCheckin(
+      String userId, String emotionCard, int intensity) async {
     final json = await _api.post('/api/checkins', body: {
       'userId': userId,
       'emotionCard': emotionCard,
@@ -58,11 +66,15 @@ class MaringRepository {
 
   Future<List<EmotionCheckin>> checkinHistory(String userId) async {
     final json = await _api.get('/api/checkins', query: {'userId': userId});
-    return (json as List).map((e) => EmotionCheckin.fromJson(e as Map<String, dynamic>)).toList();
+    return (json as List)
+        .map((e) => EmotionCheckin.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<CrisisResource>> crisisResources() async {
     final json = await _api.get('/api/safety/resources');
-    return (json as List).map((e) => CrisisResource.fromJson(e as Map<String, dynamic>)).toList();
+    return (json as List)
+        .map((e) => CrisisResource.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

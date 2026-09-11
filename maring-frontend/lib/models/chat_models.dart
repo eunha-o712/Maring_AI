@@ -3,7 +3,8 @@ class CrisisResource {
   final String number;
   final String hours;
 
-  const CrisisResource({required this.name, required this.number, required this.hours});
+  const CrisisResource(
+      {required this.name, required this.number, required this.hours});
 
   factory CrisisResource.fromJson(Map<String, dynamic> json) => CrisisResource(
         name: json['name'] as String? ?? '',
@@ -31,10 +32,14 @@ class ChatMessage {
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
         id: json['id'] as String?,
-        role: (json['role'] as String?) == 'USER' ? ChatRole.user : ChatRole.assistant,
+        role: (json['role'] as String?) == 'USER'
+            ? ChatRole.user
+            : ChatRole.assistant,
         content: json['content'] as String? ?? '',
         riskLevel: json['riskLevel'] as String? ?? 'NONE',
-        createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) : null,
+        createdAt: json['createdAt'] != null
+            ? DateTime.tryParse(json['createdAt'] as String)
+            : null,
       );
 }
 

@@ -5,10 +5,22 @@ import '../models/maring_user.dart';
 import 'hatch_screen.dart';
 
 const _mbtiTypes = [
-  'INTJ', 'INTP', 'ENTJ', 'ENTP',
-  'INFJ', 'INFP', 'ENFJ', 'ENFP',
-  'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-  'ISTP', 'ISFP', 'ESTP', 'ESFP',
+  'INTJ',
+  'INTP',
+  'ENTJ',
+  'ENTP',
+  'INFJ',
+  'INFP',
+  'ENFJ',
+  'ENFP',
+  'ISTJ',
+  'ISFJ',
+  'ESTJ',
+  'ESFJ',
+  'ISTP',
+  'ISFP',
+  'ESTP',
+  'ESFP',
 ];
 
 /// S-02 간이 MBTI 설정.
@@ -19,7 +31,8 @@ class OnboardingMbtiScreen extends ConsumerStatefulWidget {
   const OnboardingMbtiScreen({super.key});
 
   @override
-  ConsumerState<OnboardingMbtiScreen> createState() => _OnboardingMbtiScreenState();
+  ConsumerState<OnboardingMbtiScreen> createState() =>
+      _OnboardingMbtiScreenState();
 }
 
 class _OnboardingMbtiScreenState extends ConsumerState<OnboardingMbtiScreen> {
@@ -30,7 +43,8 @@ class _OnboardingMbtiScreenState extends ConsumerState<OnboardingMbtiScreen> {
     if (_selectedType == null) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => HatchScreen(mbtiType: _selectedType!, speechStyle: _speechStyle),
+        builder: (_) =>
+            HatchScreen(mbtiType: _selectedType!, speechStyle: _speechStyle),
       ),
     );
   }
@@ -73,10 +87,12 @@ class _OnboardingMbtiScreenState extends ConsumerState<OnboardingMbtiScreen> {
               SegmentedButton<SpeechStyle>(
                 segments: const [
                   ButtonSegment(value: SpeechStyle.banmal, label: Text('반말')),
-                  ButtonSegment(value: SpeechStyle.jondaenmal, label: Text('존댓말')),
+                  ButtonSegment(
+                      value: SpeechStyle.jondaenmal, label: Text('존댓말')),
                 ],
                 selected: {_speechStyle},
-                onSelectionChanged: (s) => setState(() => _speechStyle = s.first),
+                onSelectionChanged: (s) =>
+                    setState(() => _speechStyle = s.first),
               ),
               const SizedBox(height: 20),
               FilledButton(

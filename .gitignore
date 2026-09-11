@@ -33,3 +33,8 @@ target/
 # IDE/로컬 개인 설정
 **/.idea/workspace.xml
 **/.claude/settings.local.json
+
+# Task-local tool caches and local development databases
+/.local-temp/
+**/data/*.mv.db
+**/data/*.trace.db

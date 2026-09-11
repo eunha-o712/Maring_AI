@@ -2,6 +2,7 @@ package com.maring.api.checkin.service;
 
 import com.maring.api.checkin.domain.EmotionCheckin;
 import com.maring.api.checkin.repository.EmotionCheckinRepository;
+import com.maring.api.user.service.UserService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -15,13 +16,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmotionCheckinService {
 
     private final EmotionCheckinRepository checkinRepository;
+    private final UserService userService;
 
-    public EmotionCheckinService(EmotionCheckinRepository checkinRepository) {
+    public EmotionCheckinService(EmotionCheckinRepository checkinRepository, UserService userService) {
         this.checkinRepository = checkinRepository;
+        this.userService = userService;
     }
 
     @Transactional
     public EmotionCheckin checkin(UUID userId, String emotionCard, int intensity) {
+        userService.get(userId);
         LocalDate today = LocalDate.now();
         return checkinRepository.findByUserIdAndCheckinDate(userId, today)
                 .map(existing -> {
@@ -34,6 +38,7 @@ public class EmotionCheckinService {
 
     @Transactional(readOnly = true)
     public List<EmotionCheckin> history(UUID userId) {
+        userService.get(userId);
         return checkinRepository.findByUserIdOrderByCheckinDateDesc(userId);
     }
 }

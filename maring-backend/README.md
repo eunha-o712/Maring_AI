@@ -1,97 +1,61 @@
-# 마링(Maring) 백엔드 — Spring Boot 뼈대
+# 마링 Spring Boot API
 
-MBTI AI 상담 캐릭터 앱 '마링'의 API 서버 스캐폴드.
-개발명세서(요구사항·테이블·구조)를 기반으로 **동작하는 최소 뼈대**를 구성했습니다.
+마링 Flutter 앱의 사용자, 감정 체크인, 대화와 안전 플로우를 제공하는 Java 17 / Spring Boot 3.3 API다.
 
-## 기술 스택
-- Java 17, Spring Boot 3.3.5
-- Spring Web / Spring Data JPA / Validation
-- H2 (인메모리, 별도 설치 불필요) — 운영 전환 시 PostgreSQL
+## 로컬 실행
 
-## Claude API 연동
-`PersonaService` 가 실제 대화를 생성하려면 환경변수로 API 키를 설정해야 합니다.
-```bash
-# PowerShell
-$env:ANTHROPIC_API_KEY = "sk-ant-..."
-# bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-```
-키가 없으면 자동으로 규칙 기반 폴백 응답(`PersonaService.fallbackReply`)을 사용해 서버는 계속 동작합니다.
-모델·토큰 한도는 `application.yml` 의 `maring.claude.*` 에서 조정하세요.
-MBTI 유형별 시스템 프롬프트는 `src/main/resources/personas/*.md` 에 있으며, 현재 `infp.md` 만 상세 작성되어 있고
-나머지 유형은 `default.md` 로 폴백합니다.
+저장소 루트에서 다음 스크립트를 실행하는 방법이 가장 재현 가능하다.
 
-## 실행 방법
-
-### STS(Spring Tool Suite) / IntelliJ
-1. `File > Import > Existing Maven Project` (STS) 또는 폴더 열기(IntelliJ)로 `maring-backend` 선택
-2. 의존성 다운로드 후 `MaringApplication` 실행 (JDK 17 필요)
-
-### 커맨드라인 (Maven 설치 시)
-```bash
-mvn spring-boot:run
-```
-> ⚠️ 이 저장소에는 Maven Wrapper(mvnw)를 포함하지 않았습니다. STS 내장 Maven 또는 로컬 Maven을 사용하세요.
-
-실행 후:
-- 서버: http://localhost:8080
-- H2 콘솔: http://localhost:8080/h2-console (JDBC URL `jdbc:h2:mem:maring`)
-
-## 프로젝트 구조
-```
-com.maring.api
-├─ MaringApplication.java        # 진입점 (@EnableJpaAuditing)
-├─ common/                       # 공통(BaseTimeEntity, 예외처리)
-├─ user/                         # 사용자·MBTI (domain/repository/service/controller/dto)
-├─ conversation/                 # 대화 세션·메시지 (오케스트레이터)
-├─ safety/                       # ★ 안전 파이프라인 (분류기·자원·이벤트)
-└─ persona/                      # MBTI 톤 응답 (LLM 연동 자리)
+```powershell
+.\tools\run-backend-local.ps1
 ```
 
-## 핵심 설계 — 안전 파이프라인
-명세 원칙대로 **안전은 프롬프트가 아니라 별도 분류기 + 스크립트로 이중화**했습니다.
-대화 흐름(`ConversationService.sendMessage`):
-1. `SafetyClassifier` 로 위기 수준 분류 (NONE/LOW/MEDIUM/HIGH)
-2. **MEDIUM 이상** → 안전 플로우: 존댓말 공감 + 위기자원(109·1577-0199) 안내 + `safety_events` 기록
-3. 정상 → `PersonaService` 가 MBTI 톤 응답 (지금은 스텁, **실제 구현 시 이 자리에서 LLM 호출**)
+스크립트는 실행 JAR을 패키징한 뒤 `local` 프로필로 시작한다. 데이터는 `maring-backend/data/maring.mv.db`에 보존되며 Git에는 포함되지 않는다. 빌드를 생략하려면 이미 패키징된 JAR이 있는 상태에서 `-SkipBuild`를 쓴다.
 
-## API 빠른 확인 (curl)
-```bash
-# 1) 회원 생성
-curl -X POST localhost:8080/api/users \
-  -H "Content-Type: application/json" \
-  -d '{"email":"a@b.com","nickname":"은하"}'
-# → { "id": "<USER_ID>", ... }
+직접 실행하려면:
 
-# 2) MBTI 설정
-curl -X PUT localhost:8080/api/users/<USER_ID>/mbti \
-  -H "Content-Type: application/json" -d '{"mbtiType":"INFP"}'
-
-# 3) 대화 시작
-curl -X POST "localhost:8080/api/conversations?userId=<USER_ID>"
-# → { "conversationId": "<CONV_ID>" }
-
-# 4) 메시지 — 일반
-curl -X POST localhost:8080/api/conversations/<CONV_ID>/messages \
-  -H "Content-Type: application/json" -d '{"message":"오늘 좀 지쳤어"}'
-# → INFP 톤 공감 응답, riskLevel: NONE
-
-# 5) 메시지 — 위기 감지(안전 플로우)
-curl -X POST localhost:8080/api/conversations/<CONV_ID>/messages \
-  -H "Content-Type: application/json" -d '{"message":"다 사라지고 싶어"}'
-# → safetyTriggered: true, 위기자원 포함 응답
-
-# 6) 위기 자원 목록
-curl localhost:8080/api/safety/resources
+```powershell
+mvn -B -pl maring-backend package "-DskipTests"
+java -jar .\maring-backend\target\maring-api-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
 ```
 
-## 다음 단계 (TODO)
-- [x] `PersonaService` → 실제 LLM API 연동(유형별 시스템 프롬프트 주입) — 스트리밍은 아직 미구현
-- [ ] INFP 외 나머지 15개 MBTI 유형 시스템 프롬프트 작성 (`personas/*.md`)
-- [ ] `SafetyClassifier` → 키워드 대신 학습된 위기 분류 모델
-- [ ] 캐릭터 성장/감정 리포트/구독 도메인 추가 (명세 Ⅰ·Ⅱ 참조)
-- [ ] 인증(JWT), PostgreSQL + Flyway 마이그레이션, 대화 content 암호화
-- [ ] 위기자원 번호·운영시간 최신화 및 전문가 검토
+기본 프로필은 인메모리 H2를 사용한다. 로컬 프로필의 H2 콘솔은 `http://localhost:8080/h2-console`이며 JDBC URL은 `jdbc:h2:file:./data/maring`이다.
 
----
-⚠️ 본 스캐폴드는 기획서·명세 기반 초안입니다. 안전·개인정보 관련 로직은 출시 전 반드시 전문가 검토가 필요합니다.
+## Claude 연동
+
+```powershell
+$env:ANTHROPIC_API_KEY = 'sk-ant-...'
+$env:ANTHROPIC_MODEL = '<사용할 모델 ID>'
+```
+
+키가 없거나 호출이 실패하면 규칙 기반 공감 답변으로 안전하게 폴백한다. `infp.md`는 전용 프롬프트가 있고 나머지 유형은 현재 `default.md`를 사용한다.
+
+## 주요 API
+
+- `POST /api/users`, `GET /api/users/{id}`
+- `PUT /api/users/{id}/mbti`, `PUT /api/users/{id}/speech-style`
+- `POST /api/checkins`, `GET /api/checkins?userId=...`
+- `POST /api/conversations?userId=...`
+- `POST /api/conversations/{id}/messages`
+- `GET /api/conversations/{id}/messages`
+- `GET /api/safety/resources`
+
+대화는 먼저 독립 안전 분류기를 거친다. MEDIUM 이상이면 LLM 응답 대신 고정 안전 문구와 위기 자원을 반환하고 이벤트를 기록한다.
+
+## 테스트
+
+저장소 루트에서:
+
+```powershell
+mvn -B test
+```
+
+통합 테스트는 온보딩, 같은 날짜 체크인 덮어쓰기, 정상 대화 폴백, 위기 안전 플로우, 잘못된 사용자/감정/대화 ID를 검증한다.
+
+## 출시 전 과제
+
+- 16개 MBTI별 시스템 프롬프트 완성 및 평가
+- 키워드 분류기를 검증된 위기 분류 체계로 교체
+- 인증, PostgreSQL/Flyway, 대화 데이터 암호화와 보존 정책
+- 위기 자원 번호·운영시간·안전 문구의 최신성 및 전문가 검토
+- 운영 관측성, 비밀 관리, 부하/복구 테스트
