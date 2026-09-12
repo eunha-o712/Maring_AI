@@ -1,64 +1,64 @@
-# 마링(Maring) 프론트엔드 — Flutter
+# 마링 Flutter 앱
 
-MBTI AI 상담 캐릭터 앱 '마링'의 모바일 클라이언트. 개발명세서 Ⅲ. 화면 스토리보드의 **P1(MVP) 화면
-S-01~S-08**을 구현했다. `maring-backend` API 와 연동해서 동작한다.
-
-## 준비물
-- Flutter SDK (설치: https://docs.flutter.dev/get-started/install)
-- 실행 중인 `maring-backend` 서버 (기본 포트 8080)
-
-이 저장소에는 `lib/`와 `pubspec.yaml`만 있고 `android/`·`ios/` 등 플랫폼 폴더는 없다.
-**최초 1회**, 이 폴더에서 아래 명령으로 플랫폼 폴더를 생성해야 한다 (기존 `lib/`, `pubspec.yaml`은 보존됨):
-
-```bash
-cd maring-frontend
-flutter create .
-flutter pub get
-```
+감정 체크인과 MBTI 말투 기반 대화를 제공하는 모바일 MVP다. Android, iOS, web 등 Flutter 플랫폼 폴더가 이미 포함되어 있으며 `maring-backend` API와 연결된다.
 
 ## 실행
-```bash
-flutter run
-```
 
-### 백엔드 주소 설정
-`lib/core/api_config.dart` 의 기본값은 **Android 에뮬레이터** 기준(`http://10.0.2.2:8080`)이다.
-다른 환경에서는 실행 시 `--dart-define`으로 오버라이드:
+백엔드를 먼저 `http://localhost:8080`에서 실행한 뒤:
 
-```bash
-# iOS 시뮬레이터 / 웹
+```powershell
+flutter pub get
 flutter run --dart-define=MARING_API_BASE_URL=http://localhost:8080
-
-# 실기기 (PC와 같은 Wi-Fi, PC의 사설 IP로)
-flutter run --dart-define=MARING_API_BASE_URL=http://192.168.0.10:8080
 ```
 
-## 구현된 화면 (P1 MVP)
+- Android 에뮬레이터 기본값: `http://10.0.2.2:8080`
+- iOS 시뮬레이터/web 기본값: `http://localhost:8080`
+- 실제 기기: `--dart-define=MARING_API_BASE_URL=http://<PC의-사설-IP>:8080`
+
+## 2.5D 캐릭터
+
+`assets/maring/`의 표정 PNG 9종과 `assets/maring/growth/`의 성장 PNG 5종을 사용한다. 모두 1024×1024 투명 RGBA다. `MaringCharacter`가 표정/성장 전환, 글로우와 호흡 모션, 동작 줄이기 설정을 공통 처리한다.
+
+새 사용자는 작은 `구름 씨앗`으로 시작하며 서로 다른 날짜의 체크인이 3·7·14·30일 쌓일 때 몸집과 색이 변한다. 홈의 새싹 아이콘에서 전체 성장 단계를 확인할 수 있다.
+
+표정 갤러리를 앱 대신 바로 띄우는 웹 빌드:
+
+```powershell
+flutter build web --no-pub --dart-define=MARING_CHARACTER_PREVIEW=true
+node ..\tools\preview.mjs
+```
+
+## 구현 화면
+
 | 화면 | 내용 |
 |---|---|
-| S-01 | 온보딩 시작 — 닉네임 입력 + 약관/비의료 고지 동의 |
-| S-02 | MBTI 설정 — 16유형 그리드 선택 + 말투(반말/존댓말) |
-| S-03 | 캐릭터 부화 — 부화 연출 후 서버에 MBTI·말투 저장 |
-| S-04 | 홈 — 마링이 캐릭터, 체크인·대화 진입, 하단 탭 |
-| S-05 | 감정 체크인 — 감정 카드 + 강도 슬라이더 |
-| S-06 | 상담 대화 — 채팅 UI, 대화 히스토리 로드 |
-| S-07 | 안전 안내 오버레이 — 위기 감지 시 자동 표시 |
-| S-08 | 마음 기록 — 이번 달 감정 캘린더 |
+| S-01 | 닉네임과 고지 동의 온보딩 |
+| S-02 | 16개 MBTI 직접 선택과 반말/존댓말 설정 |
+| S-03 | 캐릭터 부화와 설정 저장 |
+| S-04 | 오늘 감정을 반영하는 2.5D 홈 |
+| S-05 | 감정 8종과 강도 체크인 |
+| S-06 | 대화 및 히스토리 |
+| S-07 | 위기 감지 시 전화 연결 버튼이 있는 안전 안내 |
+| S-08 | 월별 감정 캘린더와 상세 보기 |
 
-## 알고 있는 제약 (후속 작업)
-- **S-02 진단 퀴즈 없음**: 명세의 12~16문항 간이 진단은 콘텐츠가 없어 "유형 직접 선택"만 구현했다.
-- **S-07 긴급 연락처 다이얼 없음**: `url_launcher` 등 외부 패키지를 추가하지 않아 전화번호는 텍스트로만 표시된다.
-- **자동 감정 일기/주간 리포트(FR-C1, C3) 없음**: LLM 요약 파이프라인이 아직 없어 S-08은 체크인 캘린더까지만 구현했다.
-- **캐릭터 성장·상점·구독·관계상담(P2/P3+)**: 하단 탭에 자리만 두고 "준비 중"으로 안내.
-- Riverpod 상태는 앱 재시작 시 `SharedPreferences`에 저장된 `userId`로 세션을 복구한다. 백엔드가
-  H2 인메모리 DB라 서버를 재시작하면 저장된 `userId`가 무효화되고, 앱이 자동으로 로그아웃 처리한다.
+## 품질 확인
 
-## 아키텍처
+Windows에서 한글 사용자 경로로 인한 Flutter 테스트 엔진 종료를 피하려면 루트의 래퍼를 사용한다.
+
+```powershell
+..\tools\test-flutter.ps1
+flutter analyze --no-pub
+flutter build web --no-pub
+flutter build apk --debug --no-pub
 ```
-lib/
-├─ core/          # API 클라이언트, 설정, 저장소(MaringRepository)
-├─ models/        # 서버 DTO에 대응하는 Dart 모델
-├─ state/         # Riverpod StateNotifier/Provider (세션·채팅·체크인)
-├─ screens/       # S-01~S-08 화면
-└─ widgets/       # 공용 위젯 (안전 오버레이 등)
-```
+
+테스트는 표정 9종과 성장 5종 이미지의 디코딩/투명 모서리, 성장 단계의 크기 증가와 체크인 임계값, 작은 화면 온보딩, 갤러리 표정 전환, 세션 복구와 온보딩 저장 순서를 확인한다.
+
+## 알려진 후속 범위
+
+- 간이 MBTI 진단 문항은 아직 없고 유형 직접 선택만 제공한다.
+- 자동 감정 일기와 주간 리포트는 아직 없다.
+- 성장 이미지는 구현됐지만 운영용 성장 포인트와 보상은 아직 서버에 저장하지 않는다.
+- 상점, 구독, 관계상담은 준비 중 화면만 있다.
+- 전화 연결은 실제 전화 기능이 있는 기기에서 최종 확인해야 한다.
+- 운영 출시 전 안전 문구와 연락처는 전문가가 다시 검토해야 한다.

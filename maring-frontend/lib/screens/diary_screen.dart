@@ -6,6 +6,7 @@ import '../models/checkin.dart';
 import '../state/providers.dart';
 import '../state/checkin_providers.dart';
 import 'chat_screen.dart';
+import '../widgets/maring_character.dart';
 
 /// S-08 마음 기록 — 감정 캘린더(이번 달) + 대화 이어가기.
 ///
@@ -65,52 +66,82 @@ class _MonthCalendar extends StatelessWidget {
 
     final byDate = <int, EmotionCheckin>{
       for (final c in checkins)
-        if (c.checkinDate.year == now.year && c.checkinDate.month == now.month) c.checkinDate.day: c,
+        if (c.checkinDate.year == now.year && c.checkinDate.month == now.month)
+          c.checkinDate.day: c,
     };
 
     return Column(
       children: [
         const Row(
           children: [
-            _WeekdayLabel('일'), _WeekdayLabel('월'), _WeekdayLabel('화'), _WeekdayLabel('수'),
-            _WeekdayLabel('목'), _WeekdayLabel('금'), _WeekdayLabel('토'),
+            _WeekdayLabel('일'),
+            _WeekdayLabel('월'),
+            _WeekdayLabel('화'),
+            _WeekdayLabel('수'),
+            _WeekdayLabel('목'),
+            _WeekdayLabel('금'),
+            _WeekdayLabel('토'),
           ],
         ),
         const SizedBox(height: 4),
         Expanded(
           child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7),
             itemCount: leadingBlanks + daysInMonth,
             itemBuilder: (context, index) {
               if (index < leadingBlanks) return const SizedBox.shrink();
               final day = index - leadingBlanks + 1;
               final checkin = byDate[day];
               final isToday = day == now.day;
+              final card = checkin == null
+                  ? null
+                  : EmotionCard.all.cast<EmotionCard?>().firstWhere(
+                        (emotion) => emotion?.key == checkin.emotionCard,
+                        orElse: () => null,
+                      );
+              final openDetail = checkin == null
+                  ? null
+                  : () => _showDetail(context, day, checkin);
 
-              return GestureDetector(
-                onTap: checkin == null
-                    ? null
-                    : () => _showDetail(context, day, checkin),
-                child: Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: isToday ? Border.all(color: Theme.of(context).colorScheme.primary, width: 1.5) : null,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('$day', style: const TextStyle(fontSize: 11)),
-                      Text(
-                        checkin != null
-                            ? EmotionCard.all.firstWhere(
-                                (e) => e.key == checkin.emotionCard,
-                                orElse: () => const EmotionCard('', '·', ''),
-                              ).emoji
-                            : '',
-                        style: const TextStyle(fontSize: 14),
+              return Semantics(
+                button: checkin != null,
+                label: checkin == null
+                    ? '$day일'
+                    : '$day일 ${card?.label ?? '감정 기록'}, 강도 ${checkin.intensity}',
+                onTap: openDetail,
+                child: ExcludeSemantics(
+                  child: InkWell(
+                    onTap: openDetail,
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      margin: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: isToday
+                            ? Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 1.5,
+                              )
+                            : null,
                       ),
-                    ],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('$day', style: const TextStyle(fontSize: 11)),
+                          if (checkin != null)
+                            MaringCharacter(
+                              mood: MaringMoodPresentation.forEmotion(
+                                checkin.emotionCard,
+                              ),
+                              size: 30,
+                              animate: false,
+                              showGlow: false,
+                              excludeSemantics: true,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -124,7 +155,7 @@ class _MonthCalendar extends StatelessWidget {
   void _showDetail(BuildContext context, int day, EmotionCheckin checkin) {
     final card = EmotionCard.all.firstWhere(
       (e) => e.key == checkin.emotionCard,
-      orElse: () => const EmotionCard('', '❓', '알 수 없음'),
+      orElse: () => const EmotionCard('', '알 수 없음'),
     );
     showModalBottomSheet(
       context: context,
@@ -133,9 +164,14 @@ class _MonthCalendar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('${DateTime.now().month}월 $day일', style: Theme.of(context).textTheme.titleMedium),
+            Text('${DateTime.now().month}월 $day일',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            Text('${card.emoji} ${card.label} · 강도 ${checkin.intensity}/5', style: const TextStyle(fontSize: 16)),
+            MaringCharacter(
+                mood: MaringMoodPresentation.forEmotion(checkin.emotionCard),
+                size: 160),
+            Text('${card.label} · 강도 ${checkin.intensity}/5',
+                style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
@@ -150,7 +186,9 @@ class _WeekdayLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Center(child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey))),
+      child: Center(
+          child: Text(label,
+              style: const TextStyle(fontSize: 12, color: Colors.grey))),
     );
   }
 }

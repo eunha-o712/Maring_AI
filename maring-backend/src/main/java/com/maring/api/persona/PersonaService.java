@@ -42,11 +42,15 @@ public class PersonaService {
             return claudeClient.generateReply(systemPrompt, turns);
         } catch (ClaudeApiException e) {
             log.warn("Claude API 호출 실패, 규칙 기반 응답으로 폴백합니다: {}", e.getMessage());
-            return fallbackReply(mbtiType);
+            return fallbackReply(mbtiType, speechStyle);
         }
     }
 
-    private String fallbackReply(String mbtiType) {
+    private String fallbackReply(String mbtiType, SpeechStyle speechStyle) {
+        if (speechStyle == SpeechStyle.JONDAENMAL) {
+            return "이야기해 주셔서 고마워요. 지금 어떤 마음인지 조금 더 들려주실래요? "
+                    + "편한 속도로 말씀해 주세요. 곁에서 듣고 있을게요.";
+        }
         String type = mbtiType == null ? "" : mbtiType.toUpperCase();
 
         if (type.equals("INFP")) {

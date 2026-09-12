@@ -3,10 +3,12 @@ package com.maring.api.persona;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.time.Duration;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClientException;
 
 /**
@@ -25,7 +27,11 @@ public class ClaudeClient {
     public ClaudeClient(ClaudeProperties properties, ObjectMapper objectMapper) {
         this.properties = properties;
         this.objectMapper = objectMapper;
-        this.restClient = RestClient.create(properties.getBaseUrl());
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(30));
+        this.restClient = RestClient.builder().baseUrl(properties.getBaseUrl())
+                .requestFactory(factory).build();
     }
 
     public String generateReply(String systemPrompt, List<PersonaTurn> turns) {

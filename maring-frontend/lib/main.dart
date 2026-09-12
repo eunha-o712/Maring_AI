@@ -6,6 +6,7 @@ import 'screens/splash_screen.dart';
 import 'screens/onboarding_nickname_screen.dart';
 import 'screens/onboarding_mbti_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/character_gallery_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: MaringApp()));
@@ -27,7 +28,9 @@ class MaringApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: maringPrimary),
         scaffoldBackgroundColor: const Color(0xFFFAFAFF),
       ),
-      home: const SessionGate(),
+      home: const bool.fromEnvironment('MARING_CHARACTER_PREVIEW')
+          ? const CharacterGalleryScreen()
+          : const SessionGate(),
     );
   }
 }
@@ -42,6 +45,21 @@ class SessionGate extends ConsumerWidget {
 
     if (session.loading) {
       return const SplashScreen();
+    }
+    if (session.error != null && session.user == null) {
+      return Scaffold(
+          body: Center(
+              child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(session.error!, textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          FilledButton(
+              onPressed: () =>
+                  ref.read(sessionProvider.notifier).retryRestore(),
+              child: const Text('다시 연결하기')),
+        ]),
+      )));
     }
     if (session.user == null) {
       return const OnboardingNicknameScreen();

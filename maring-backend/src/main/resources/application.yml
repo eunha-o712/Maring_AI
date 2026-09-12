@@ -28,7 +28,7 @@ server:
 maring:
   claude:
     api-key: ${ANTHROPIC_API_KEY:}
-    model: claude-sonnet-5
+    model: ${ANTHROPIC_MODEL:claude-sonnet-5}
     max-tokens: 1024
     base-url: https://api.anthropic.com
   crisis-resources:

@@ -91,6 +91,9 @@ public class ConversationService {
 
     @Transactional(readOnly = true)
     public List<Message> history(UUID conversationId) {
+        if (!conversationRepository.existsById(conversationId)) {
+            throw new NoSuchElementException("대화를 찾을 수 없습니다: " + conversationId);
+        }
         return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
     }
 }

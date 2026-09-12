@@ -16,8 +16,12 @@ class ApiException implements Exception {
 /// 마링 백엔드용 최소 HTTP 클라이언트.
 class ApiClient {
   final http.Client _client;
+  final Duration timeout;
 
-  ApiClient({http.Client? client}) : _client = client ?? http.Client();
+  ApiClient({http.Client? client, this.timeout = const Duration(seconds: 45)})
+      : _client = client ?? http.Client();
+
+  void close() => _client.close();
 
   Uri _uri(String path, [Map<String, dynamic>? query]) {
     final normalized = path.startsWith('/') ? path : '/$path';
@@ -29,25 +33,32 @@ class ApiClient {
   Map<String, String> get _headers => {'Content-Type': 'application/json'};
 
   Future<dynamic> get(String path, {Map<String, dynamic>? query}) async {
-    final res = await _client.get(_uri(path, query), headers: _headers);
+    final res = await _client
+        .get(_uri(path, query), headers: _headers)
+        .timeout(timeout);
     return _decode(res);
   }
 
-  Future<dynamic> post(String path, {Map<String, dynamic>? body, Map<String, dynamic>? query}) async {
-    final res = await _client.post(
-      _uri(path, query),
-      headers: _headers,
-      body: body == null ? null : jsonEncode(body),
-    );
+  Future<dynamic> post(String path,
+      {Map<String, dynamic>? body, Map<String, dynamic>? query}) async {
+    final res = await _client
+        .post(
+          _uri(path, query),
+          headers: _headers,
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(timeout);
     return _decode(res);
   }
 
   Future<dynamic> put(String path, {Map<String, dynamic>? body}) async {
-    final res = await _client.put(
-      _uri(path),
-      headers: _headers,
-      body: body == null ? null : jsonEncode(body),
-    );
+    final res = await _client
+        .put(
+          _uri(path),
+          headers: _headers,
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(timeout);
     return _decode(res);
   }
 

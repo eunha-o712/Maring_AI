@@ -45,20 +45,28 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   Future<void> _loadHistory() async {
     try {
-      final history = await _ref.read(maringRepositoryProvider).conversationHistory(conversationId);
+      final history = await _ref
+          .read(maringRepositoryProvider)
+          .conversationHistory(conversationId);
+      if (!mounted) return;
       state = state.copyWith(messages: history, loadingHistory: false);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(loadingHistory: false, error: '대화 기록을 불러오지 못했어요.');
     }
   }
 
   Future<void> send(String text) async {
-    if (text.trim().isEmpty || state.sending) return;
+    if (text.trim().isEmpty || state.sending || state.loadingHistory) return;
     final userMessage = ChatMessage(role: ChatRole.user, content: text);
-    state = state.copyWith(messages: [...state.messages, userMessage], sending: true, error: null);
+    state = state.copyWith(
+        messages: [...state.messages, userMessage], sending: true, error: null);
 
     try {
-      final response = await _ref.read(maringRepositoryProvider).sendMessage(conversationId, text);
+      final response = await _ref
+          .read(maringRepositoryProvider)
+          .sendMessage(conversationId, text);
+      if (!mounted) return;
       final assistantMessage = ChatMessage(
         role: ChatRole.assistant,
         content: response.reply,
@@ -70,7 +78,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
         lastSafety: response.safetyTriggered ? response : null,
       );
     } catch (e) {
-      state = state.copyWith(sending: false, error: '마링이가 응답하지 못했어요. 잠시 후 다시 시도해줘.');
+      if (!mounted) return;
+      state = state.copyWith(
+          sending: false, error: '마링이가 응답하지 못했어요. 잠시 후 다시 시도해줘.');
     }
   }
 
@@ -80,6 +90,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 }
 
 final chatProvider =
-    StateNotifierProvider.family<ChatNotifier, ChatState, String>((ref, conversationId) {
+    StateNotifierProvider.family<ChatNotifier, ChatState, String>(
+        (ref, conversationId) {
   return ChatNotifier(ref, conversationId);
 });

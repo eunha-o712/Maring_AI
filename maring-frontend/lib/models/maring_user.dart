@@ -30,7 +30,8 @@ class MaringUser {
       id: json['id'] as String,
       email: json['email'] as String?,
       nickname: json['nickname'] as String,
-      speechStyle: SpeechStyleX.fromApi(json['speechStyle'] as String? ?? 'BANMAL'),
+      speechStyle:
+          SpeechStyleX.fromApi(json['speechStyle'] as String? ?? 'BANMAL'),
       mbtiType: json['mbtiType'] as String?,
     );
   }
