@@ -1,5 +1,7 @@
 # 마링(Maring)
 
+[![CI](https://github.com/eunha-o712/Maring_AI/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/eunha-o712/Maring_AI/actions/workflows/ci.yml)
+
 마링은 감정 체크인과 MBTI 말투 기반 대화를 제공하는 Flutter + Spring Boot MVP다. 캐릭터 방향은 기존 GLB 3D 시안이 아니라, 원본의 둥근 실루엣과 파스텔 질감을 유지한 **투명 PNG 기반 2.5D 표정 세트**로 확정했다.
 
 ## 현재 구성
